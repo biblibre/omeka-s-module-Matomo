@@ -7,6 +7,7 @@ use Laminas\EventManager\SharedEventManagerInterface;
 use Laminas\EventManager\Event;
 use Laminas\Mvc\Controller\AbstractController;
 use Laminas\View\Renderer\PhpRenderer;
+use Matomo\Form\SettingsForm;
 
 class Module extends AbstractModule
 {
@@ -15,14 +16,18 @@ class Module extends AbstractModule
         $serviceLocator = $this->getServiceLocator();
         $formElementManager = $serviceLocator->get('FormElementManager');
         $settings = $serviceLocator->get('Omeka\Settings');
-        $form = $formElementManager->get(Form\SettingsForm::class);
+        $form = $formElementManager->get(SettingsForm::class);
 
-        $form->setData([
-            'js_tracking_code' => $settings->get('matomo_js_tracking_code'),
-            'track_admin' => $settings->get('matomo_track_admin'),
-        ]);
+        $data = [];
+        foreach ($form as $element) {
+            $name = $element->getName();
+            if (null !== ($value = $settings->get($name))) {
+                $data[$name] = $value;
+            }
+        }
+        $form->setData($data);
 
-        return $renderer->formCollection($form, false);
+        return $renderer->partial('matomo/config-form', ['form' => $form]);
     }
 
     public function handleConfigForm(AbstractController $controller)
@@ -30,7 +35,7 @@ class Module extends AbstractModule
         $serviceLocator = $this->getServiceLocator();
         $formElementManager = $serviceLocator->get('FormElementManager');
         $settings = $serviceLocator->get('Omeka\Settings');
-        $form = $formElementManager->get(Form\SettingsForm::class);
+        $form = $formElementManager->get(SettingsForm::class);
 
         $form->setData($controller->params()->fromPost());
         if (!$form->isValid()) {
@@ -39,9 +44,12 @@ class Module extends AbstractModule
         }
 
         $formData = $form->getData();
-        $js_tracking_code = trim(strip_tags($formData['js_tracking_code']));
-        $settings->set('matomo_js_tracking_code', $js_tracking_code);
-        $settings->set('matomo_track_admin', $formData['track_admin']);
+        foreach ($form as $element) {
+            $name = $element->getName();
+            if (str_starts_with($name, 'matomo_') && isset($formData[$name])) {
+                $settings->set($name, $formData[$name]);
+            }
+        }
 
         return true;
     }
@@ -54,14 +62,7 @@ class Module extends AbstractModule
     public function onViewLayout(Event $event)
     {
         $serviceLocator = $this->getServiceLocator();
-        $formElementManager = $serviceLocator->get('FormElementManager');
         $settings = $serviceLocator->get('Omeka\Settings');
-
-        // Do nothing if the module is not configured
-        $js_tracking_code = trim($settings->get('matomo_js_tracking_code', ''));
-        if (!$js_tracking_code) {
-            return;
-        }
 
         $view = $event->getTarget();
 
@@ -73,6 +74,18 @@ class Module extends AbstractModule
                 return;
             }
         }
+
+        $js_tracking_code = trim($settings->get('matomo_js_tracking_code', ''));
+        if (!$js_tracking_code) {
+            $js_tracking_code = trim($view->partial('matomo/js-tracking-code'));
+        }
+
+        // Do nothing if the module is not configured
+        if (!$js_tracking_code) {
+            return;
+        }
+
+        $js_tracking_code = strip_tags($js_tracking_code);
 
         $view->headScript()->appendScript($js_tracking_code);
     }

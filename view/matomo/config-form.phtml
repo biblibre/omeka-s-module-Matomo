@@ -1,0 +1,17 @@
+<div>
+    <a class="expand" href="#" aria-label="<?= $this->translate('Expand') ?>" title="<?= $this->translate('Expand') ?>"><?= $this->translate('Configuration guide') ?> </a>
+    <div class="collapsible">
+        <span><?= $this->translate('You can configure the Matomo module in two different ways. You can pick only one of these:') ?></span>
+        <dl>
+            <dt><?= $this->translate('Option 1: URL and Site ID (recommended)') ?></dt>
+            <dd><?= $this->translate("With this option you only need to set Matomo's URL and site ID. The javascript tracking code will be automatically generated.") ?></dd>
+            <dd><?= $this->translate('Other Omeka modules can modify this code and themes can override a template to customize it.') ?></dd>
+
+            <dt><?= $this->translate('Option 2: Javascript tracking code') ?></dt>
+            <dd><?= $this->translate("With this option you need to copy and paste Matomo's javascript tracking code.") ?></dd>
+            <dd><?= $this->translate("You can then customize it to your needs but Omeka modules and themes won't have the ability to modify it."); ?></dd>
+        </dl>
+    </div>
+</div>
+
+<?= $this->formCollectionElementGroups($form, false) ?>
