@@ -6,8 +6,7 @@ pages, and optionally on all admin pages too. That's it.
 ## Quick start
 
 1. [Install the module](https://omeka.org/s/docs/user-manual/modules/#adding-modules-to-omeka-s)
-2. In the configuration form, copy your Matomo Javascript tracking code (found
-   in your Matomo site settings).
+2. In the configuration form, set the Matomo URL and Site ID.
 3. (Optional) Check the `Track admin pages visits` checkbox if you want admin
    pages visits to be tracked too.
 4. Submit the form
